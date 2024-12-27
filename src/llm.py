@@ -10,7 +10,7 @@ def get_client():
         raise ValueError("ANTHROPIC_API_KEY not found in environment")
     
     # Print first few chars of key for debugging
-    print(f"Using API key: {api_key[:8]}...")
+    # print(f"Using API key: {api_key[:8]}...")
     return Anthropic(api_key=api_key)
 
 async def get_claude_response(prompt: str) -> str:
