@@ -1,56 +1,214 @@
-# WorldMorph
+# WorldMorph: A Multi-Agent Simulation Framework
 
-A parallel multi-agent simulation system using Claude for agent intelligence.
+A flexible framework for creating and running multi-agent simulations with natural language interactions. Built with Python and Claude.
 
-## Setup
+## System Architecture
 
-1. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+```mermaid
+graph TD
+    A[User Input] --> B[Simulation Controller]
+    B --> C[World Simulation]
+    C --> D[State Manager]
+    C --> E[Monitor]
+    
+    subgraph "World"
+        D --> F[Agent 1]
+        D --> G[Agent 2]
+        D --> H[Agent N]
+        F --> |Events| D
+        G --> |Events| D
+        H --> |Events| D
+    end
+    
+    subgraph "LLM Integration"
+        F --> I[Claude API]
+        G --> I
+        H --> I
+        I --> F
+        I --> G
+        I --> H
+    end
+    
+    E --> |Display| J[UI]
 ```
 
-2. Install requirements:
+## Key Components
+
+### Core Classes
+- **SimulationController**: Manages simulation creation and lifecycle
+- **WorldSimulation**: Handles agent creation and coordination
+- **Agent**: Individual actors with autonomous behavior
+- **StateManager**: Manages shared state and event propagation
+- **Monitor**: Real-time visualization of simulation state
+
+### State Flow
+```mermaid
+sequenceDiagram
+    participant User
+    participant Controller
+    participant World
+    participant Agent
+    participant LLM
+    participant Monitor
+
+    User->>Controller: Start simulation
+    Controller->>World: Create world
+    World->>Agent: Spawn agents
+    
+    loop Simulation Loop
+        Agent->>LLM: Request action
+        LLM->>Agent: Return action
+        Agent->>World: Publish event
+        World->>Monitor: Update display
+    end
+
+    User->>Controller: Stop simulation
+    Controller->>World: Stop world
+    World->>Agent: Stop agents
+```
+
+## Getting Started
+
+### Prerequisites
 ```bash
+python 3.11+
 pip install -r requirements.txt
 ```
 
-3. Configure environment:
-- Copy `.env.example` to `.env`
-- Add your Anthropic API key to `.env`
-
-## Running Simulations
-
-Basic simulation:
-```bash
-python examples/run_simulation.py
+### Environment Setup
+Create a `.env` file in the project root:
+```env
+ANTHROPIC_API_KEY=your_api_key_here
 ```
 
-Monitored simulation:
+### Running a Simulation
 ```bash
-python examples/run_monitored_simulation.py
+python examples/run_configured_simulation.py
 ```
 
-Multi-agent simulation:
-```bash
-python examples/run_multi_agent.py
+## Simulation Types
+
+The framework comes with three pre-configured simulation types:
+
+1. **Organizational Simulation**
+   - Simulates company dynamics
+   - Multiple roles and hierarchies
+   - Team interactions and workflows
+
+2. **Economic Policy Simulation**
+   - Models economic systems
+   - Policy impacts and market responses
+   - Multiple stakeholder interactions
+
+3. **Urban Development Simulation**
+   - City planning and growth
+   - Infrastructure development
+   - Population dynamics
+
+## Custom Simulations
+
+Create your own simulation by defining:
+1. World parameters
+2. Agent types and properties
+3. Interaction rules
+4. Environmental factors
+
+Example:
+```python
+world_description = """
+# Custom World Parameters
+- Population: 1000
+- Environment: Virtual marketplace
+- Time Scale: 1 tick = 1 hour
+
+# Agent Types
+- Buyers
+  - Goals: Find best deals
+  - Budget: $100-1000
+- Sellers
+  - Goals: Maximize profit
+  - Inventory: 10-100 items
+"""
+
+config = await SimulationConfig.from_prompt(world_description)
 ```
 
-## Project Structure
+## Real-time Monitoring
 
-- `src/`: Core implementation
-  - `agent.py`: Agent implementation
-  - `controller.py`: Simulation controller
-  - `llm.py`: Claude interface
-  - `monitor.py`: Visualization
-  - `state/`: State management
-  - `utils/`: Utilities
+The simulation provides real-time monitoring through a dual-panel interface:
 
-- `examples/`: Example scripts
-  - Various example implementations
+```
+┌─────────── Events Log ───────────┐
+│ Time  │ Source │ Type  │ Action  │
+│ 10:00 │ Agent1 │ MOVE  │ ...     │
+│ 10:01 │ Agent2 │ SPEAK │ ...     │
+└───────────────────────────────────┘
+┌─────────── Agent Status ─────────┐
+│ ID    │ Name  │ Status│ Action   │
+│ AGT_1 │ Buyer │ Active│ Shopping │
+│ AGT_2 │ Seller│ Active│ Trading  │
+└───────────────────────────────────┘
+```
 
-## Adding New Features
+## State Management
 
-1. Agents: Extend the Agent class in `agent.py`
-2. World Rules: Modify WorldSimulation in `world.py`
-3. Monitoring: Customize WorldMonitor in `monitor.py`
+States are managed through events and subscriptions:
+
+```mermaid
+graph LR
+    A[Agent] -->|Publish| B[Event]
+    B -->|Notify| C[Subscribers]
+    C -->|Update| D[State]
+    D -->|Observe| A
+```
+
+## Development
+
+### Project Structure
+```
+multi_sim/
+├── src/
+│   ├── agent.py         # Agent implementation
+│   ├── controller.py    # Simulation controller
+│   ├── monitor.py       # UI and monitoring
+│   ├── world.py         # World simulation
+│   └── state/           # State management
+├── examples/            # Example simulations
+└── tests/              # Test suite
+```
+
+### Adding New Features
+1. **New Agent Types**
+   ```python
+   class CustomAgent(Agent):
+       async def decide_action(self) -> Dict[str, Any]:
+           # Custom decision logic
+   ```
+
+2. **Custom State Handlers**
+   ```python
+   class CustomState(WorldState):
+       async def handle_event(self, event: Event):
+           # Custom event handling
+   ```
+
+### Testing
+```bash
+python -m pytest tests/
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+MIT License - See LICENSE file for details
+
+## Contact
+
+- Issue Tracker: [Github Issues](github.com/your-repo/issues)
+- Source Code: [Github](github.com/your-repo)
