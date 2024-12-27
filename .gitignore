@@ -17,3 +17,7 @@ build/
 coverage/
 *.egg
 *.egg-info
+
+# Caches
+__pycache__/
+src/__pycache__/
