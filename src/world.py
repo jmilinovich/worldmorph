@@ -1,11 +1,14 @@
-from typing import List, Dict, Any, Optional
+from typing import List
 import asyncio
+from rich.console import Console
 from .state.interface import WorldState, Event
 from .agent import Agent
-from .config import SimulationConfig
+
+console = Console()
 
 class WorldSimulation:
-    def __init__(self, world_id: str, state: WorldState, config: Optional[SimulationConfig] = None):
+    def __init__(self, world_id: str, state: WorldState, config=None):
+        console.print(f"[cyan]Initializing world {world_id}[/cyan]")
         self.world_id = world_id
         self.state = state
         self.config = config
@@ -16,37 +19,24 @@ class WorldSimulation:
         asyncio.create_task(self.state.update("world_state", {
             "world_id": world_id,
             "status": "initialized",
-            "agent_count": 0,
-            "description": config.world_description if config else None
+            "agent_count": 0
         }))
     
     async def spawn_agent(self, agent_id: str) -> Agent:
         """Create a new agent in this world"""
-        # Create agent with its specific configuration
+        console.print(f"[yellow]Spawning agent: {agent_id}[/yellow]")
+        
+        # Create agent
         agent = Agent(agent_id, self.state, self.config)
         self.agents.append(agent)
         
-        # Get agent config if available
-        agent_config = None
-        if self.config and self.config.agents:
-            agent_config = next(
-                (a for a in self.config.agents if a['name'] == agent_id),
-                None
-            )
-        
-        # Update agent state in the state manager
-        agent_state = {
+        # Update state
+        await self.state.update(f"agent_{agent_id}", {
             "id": agent_id,
             "active": True,
             "last_action": "Agent initialized",
             "status": "ready"
-        }
-        
-        # Add config details if available
-        if agent_config:
-            agent_state.update(agent_config)
-        
-        await self.state.update(f"agent_{agent_id}", agent_state)
+        })
         
         # Notify about new agent
         await self.state.publish_event(Event(
@@ -63,14 +53,14 @@ class WorldSimulation:
     
     async def run(self):
         """Run the world simulation"""
+        console.print(f"[green]Starting world {self.world_id}[/green]")
         self.running = True
         
         # Update world state
         await self.state.update("world_state", {
             "world_id": self.world_id,
             "status": "running",
-            "agent_count": len(self.agents),
-            "description": self.config.world_description if self.config else None
+            "agent_count": len(self.agents)
         })
         
         # Publish world started event
@@ -80,28 +70,29 @@ class WorldSimulation:
             source=self.world_id
         ))
         
-        # Start all agents in parallel
-        agent_tasks = [agent.run() for agent in self.agents]
+        console.print(f"[cyan]Starting {len(self.agents)} agents...[/cyan]")
+        
+        # Start all agents
+        agent_tasks = []
+        for agent in self.agents:
+            task = asyncio.create_task(agent.run())
+            agent_tasks.append(task)
+        
+        # Wait for all agents
         await asyncio.gather(*agent_tasks)
     
     async def stop(self):
         """Stop the world simulation"""
+        console.print(f"[yellow]Stopping world {self.world_id}[/yellow]")
         self.running = False
-        
-        # Update world state
-        await self.state.update("world_state", {
-            "world_id": self.world_id,
-            "status": "stopped",
-            "agent_count": len(self.agents)
-        })
         
         # Stop all agents
         for agent in self.agents:
             await agent.stop()
         
-        # Publish world stopped event
-        await self.state.publish_event(Event(
-            type="world_stopped",
-            data={"world_id": self.world_id},
-            source=self.world_id
-        ))
+        # Update state
+        await self.state.update("world_state", {
+            "world_id": self.world_id,
+            "status": "stopped",
+            "agent_count": len(self.agents)
+        })

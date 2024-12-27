@@ -14,45 +14,50 @@ class WorldMonitor:
         self.state = state
         self.console = Console()
         self.events = []
-        self.max_events = 10
+        self.max_events = 20  # Show more events
         self.agent_states = {}
         
     def create_layout(self) -> Layout:
         """Create the display layout"""
         layout = Layout()
         
-        # Create events table
-        events_table = Table(title=f"World {self.world_id} - Recent Events", show_header=True)
-        events_table.add_column("Time")
-        events_table.add_column("Source")
-        events_table.add_column("Type")
-        events_table.add_column("Action", width=50)
+        # Events table
+        events_table = Table(
+            title=f"World {self.world_id} - Recent Events",
+            show_header=True,
+            header_style="bold magenta"
+        )
+        events_table.add_column("Time", width=12)
+        events_table.add_column("Source", width=20)
+        events_table.add_column("Type", width=10)
+        events_table.add_column("Action", width=80)
         
         for event in self.events[-self.max_events:]:
             events_table.add_row(
                 event["time"],
                 event["source"],
                 event["type"],
-                event["action"][:100] + "..." if len(event["action"]) > 100 else event["action"]
+                event["action"]
             )
         
-        # Create agents table
-        agents_table = Table(title="Active Agents", show_header=True)
-        agents_table.add_column("Agent ID")
-        agents_table.add_column("Name")
-        agents_table.add_column("Status")
-        agents_table.add_column("Last Action", width=50)
+        # Agents table
+        agents_table = Table(
+            title="Active Agents",
+            show_header=True,
+            header_style="bold magenta"
+        )
+        agents_table.add_column("Agent ID", width=30)
+        agents_table.add_column("Name", width=30)
+        agents_table.add_column("Status", width=10)
+        agents_table.add_column("Last Action", width=60)
         
         for agent_id, state in self.agent_states.items():
-            if isinstance(state, dict):  # Make sure state is a dictionary
-                agents_table.add_row(
-                    agent_id,
-                    state.get("name", "Unknown"),
-                    "Active" if state.get("active", False) else "Inactive",
-                    str(state.get("last_action", "None"))[:100] + "..." 
-                    if state.get("last_action") and len(str(state.get("last_action"))) > 100 
-                    else str(state.get("last_action", "None"))
-                )
+            agents_table.add_row(
+                agent_id,
+                state.get("name", "Unknown"),
+                "Active" if state.get("active", False) else "Inactive",
+                state.get("last_action", "No action")[:60] + "..." if state.get("last_action", "") else "No action"
+            )
         
         # Combine in layout
         layout.split_column(
@@ -93,10 +98,10 @@ class WorldMonitor:
         self.agent_states = await self.state.get_agents() or {}
         
         try:
-            with Live(self.create_layout(), refresh_per_second=4, screen=False) as live:
+            with Live(self.create_layout(), refresh_per_second=2) as live:
                 while True:
                     live.update(self.create_layout())
-                    await asyncio.sleep(0.25)
+                    await asyncio.sleep(0.5)  # Update twice per second
         except Exception as e:
             self.console.print(f"[red]Monitor error: {str(e)}[/red]")
             raise
