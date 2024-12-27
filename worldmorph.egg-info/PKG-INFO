@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: worldmorph
+Version: 0.1
+Requires-Dist: anthropic
+Requires-Dist: python-dotenv
+Requires-Dist: rich
+Requires-Dist: asyncio
+Requires-Dist: typing
