@@ -9,8 +9,11 @@ node_modules/
 
 # OS files
 .DS_Store
+worldmorph.code-workspace
 
 # Build outputs
 dist/
 build/
 coverage/
+*.egg
+*.egg-info
