@@ -1,7 +1,7 @@
 import os
 import asyncio
 from typing import List, Dict
-from anthropic import Anthropic
+from anthropic import Anthropic # type: ignore
 
 def get_client():
     """Get authenticated Anthropic client"""
