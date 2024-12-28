@@ -203,12 +203,3 @@ python -m pytest tests/
 2. Create a feature branch
 3. Make your changes
 4. Submit a pull request
-
-## License
-
-MIT License - See LICENSE file for details
-
-## Contact
-
-- Issue Tracker: [Github Issues](github.com/your-repo/issues)
-- Source Code: [Github](github.com/your-repo)
