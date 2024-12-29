@@ -1,0 +1,66 @@
+{
+  "metrics": {
+    "employee_satisfaction": [
+      {
+        "timestamp": 1735416498.851892,
+        "value": 75
+      }
+    ],
+    "team_productivity": [
+      {
+        "timestamp": 1735416498.851893,
+        "value": 100
+      }
+    ],
+    "project_completion_rate": [
+      {
+        "timestamp": 1735416498.851894,
+        "value": 0
+      }
+    ],
+    "communication_effectiveness": [
+      {
+        "timestamp": 1735416498.851894,
+        "value": 70
+      }
+    ]
+  },
+  "definitions": {
+    "employee_satisfaction": {
+      "name": "employee_satisfaction",
+      "description": "Average employee happiness score",
+      "type": "numeric",
+      "initial_value": 75,
+      "aggregation": "average",
+      "target_value": 85,
+      "target_direction": "maximize"
+    },
+    "team_productivity": {
+      "name": "team_productivity",
+      "description": "Overall team productivity index",
+      "type": "percentage",
+      "initial_value": 100,
+      "aggregation": "latest",
+      "target_value": 120,
+      "target_direction": "maximize"
+    },
+    "project_completion_rate": {
+      "name": "project_completion_rate",
+      "description": "Rate of project milestone completion",
+      "type": "percentage",
+      "initial_value": 0,
+      "aggregation": "latest",
+      "target_value": 90,
+      "target_direction": "maximize"
+    },
+    "communication_effectiveness": {
+      "name": "communication_effectiveness",
+      "description": "Team communication effectiveness score",
+      "type": "numeric",
+      "initial_value": 70,
+      "aggregation": "average",
+      "target_value": 85,
+      "target_direction": "maximize"
+    }
+  }
+}

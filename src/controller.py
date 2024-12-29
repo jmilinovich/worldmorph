@@ -1,15 +1,28 @@
 from typing import Dict, List, Optional
 import asyncio
+from datetime import timedelta
+from rich.console import Console
+
 from .world import WorldSimulation
 from .state.memory import InMemoryState
 from .config import SimulationConfig
+from .metrics import MetricDefinition
+
+console = Console()
 
 class SimulationController:
     def __init__(self):
         self.worlds: Dict[str, WorldSimulation] = {}
         self.running = False
 
-    async def create_world(self, world_id: str, num_agents: int = 3, config: Optional[SimulationConfig] = None) -> WorldSimulation:
+    async def create_world(
+        self,
+        world_id: str,
+        config: Optional[SimulationConfig] = None,
+        duration: Optional[timedelta] = None,
+        time_scale: float = 1.0,
+        metrics: Optional[list[MetricDefinition]] = None
+    ) -> WorldSimulation:
         """Create a new world simulation"""
         if world_id in self.worlds:
             raise ValueError(f"World {world_id} already exists")
@@ -17,28 +30,23 @@ class SimulationController:
         # Create new world with in-memory state
         state = InMemoryState()
         
-        # If config provided, initialize state
-        if config:
-            # Initialize world state
-            for key, value in config.initial_state.items():
-                if key != "agents":  # Handle agents separately
-                    await state.update(key, value)
-            
-            # Initialize agents
-            await state.update("agents", config.agents)
-        
         # Create world
-        world = WorldSimulation(world_id, state, config)
+        world = WorldSimulation(
+            world_id=world_id,
+            state=state,
+            config=config,
+            duration=duration,
+            time_scale=time_scale,
+            metrics=metrics
+        )
+        
         self.worlds[world_id] = world
         
-        # Spawn initial agents based on config
-        if config and config.agents:
+        # Initialize agents if config provided
+        if config and hasattr(config, 'agents'):
+            console.print(f"[cyan]Creating {len(config.agents)} agents...[/cyan]")
             for agent in config.agents:
                 await world.spawn_agent(agent['name'])
-        else:
-            # Spawn default agents if no config
-            for i in range(num_agents):
-                await world.spawn_agent(f"{world_id}_agent_{i}")
         
         return world
 
@@ -55,7 +63,7 @@ class SimulationController:
         await self.worlds[world_id].stop()
 
     async def run_all(self):
-        """Run all worlds in parallel"""
+        """Run all worlds"""
         self.running = True
         await asyncio.gather(
             *(world.run() for world in self.worlds.values())
@@ -64,10 +72,13 @@ class SimulationController:
     async def stop_all(self):
         """Stop all worlds"""
         self.running = False
-        await asyncio.gather(
-            *(world.stop() for world in self.worlds.values())
-        )
+        for world in self.worlds.values():
+            await world.stop()
 
     def get_world(self, world_id: str) -> Optional[WorldSimulation]:
         """Get a specific world"""
         return self.worlds.get(world_id)
+
+    def list_worlds(self) -> List[str]:
+        """Get list of all world IDs"""
+        return list(self.worlds.keys())
